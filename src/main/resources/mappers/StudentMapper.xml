@@ -10,5 +10,9 @@
         select * from student;
     </select>
 
+    <select id="getStudentsCalifications" resultType="Student" >
+        select * from student;
+    </select>
+
 </mapper>
 

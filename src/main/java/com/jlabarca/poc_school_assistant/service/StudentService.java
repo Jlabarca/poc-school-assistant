@@ -20,8 +20,10 @@ public class StudentService {
         List<Student> students = sqlSession.selectList("getStudents");
         for (Student s: students) {
             log.info( s.getName()+" "+phrase);
-            if(phrase.toLowerCase().contains(s.getName().toLowerCase()))
-                return s;
+            for (String n: s.getName().split(" ")) {
+                if(phrase.toLowerCase().contains(n.toLowerCase()))
+                    return s;
+            }
         }
         log.info("null");
         return null;
