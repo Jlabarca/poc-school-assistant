@@ -19,9 +19,12 @@ import com.google.actions.api.Capability;
 
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -48,6 +51,13 @@ public class SchoolAssistantApp extends DialogflowApp {
 
     private Student currentStudent;
 
+    private static final String[] SUGGESTIONS =
+            new String[]{"Asistencia", "Rendimiento", "Anotaciones"};
+    /*@ForIntent("Default Welcome Intent - apoderado")
+    public ActionResponse welcomeApoderado(ActionRequest request) {
+
+    }*/
+
 
     @ForIntent("sa.agent.student")
     public ActionResponse student(ActionRequest request) {
@@ -60,7 +70,7 @@ public class SchoolAssistantApp extends DialogflowApp {
             answer = MessageFormat.format("Te refieres a {0} de segundo medio A", currentStudent.getName(), currentStudent.getRut());
             log.info(answer);
         } else {
-            answer = "Por favor, repite el nombre o rut del alumno";
+            answer = "Por favor, dime el nombre o rut del alumno";
         }
 
         ResponseBuilder responseBuilder = getResponseBuilder(request).add(answer);
@@ -71,6 +81,8 @@ public class SchoolAssistantApp extends DialogflowApp {
 
 
     DecimalFormat df = new DecimalFormat("#,#");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    Random rn = new Random();
 
     @ForIntent("sa.agent.student - confirmar")
     public ActionResponse studentConfirmar(ActionRequest request) {
@@ -81,11 +93,55 @@ public class SchoolAssistantApp extends DialogflowApp {
             case "sí":
             case "si":
             case "afirmativo":
-                String notas = MessageFormat.format("La últimas notas de {0} son: ", currentStudent.getName());
-                notas += df.format((Math.random() * ((3) + 1)) + 3)+","+df.format((Math.random() * ((3) + 1)) + 3)+" en Matemáticas ";
-                notas += df.format((Math.random() * ((3) + 1)) + 3)+","+df.format((Math.random() * ((3) + 1)) + 3)+" en Lenguaje ";
-                notas += df.format((Math.random() * ((3) + 1)) + 3)+","+df.format((Math.random() * ((3) + 1)) + 3)+" en Química";
+
+                String nota1 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
+                String nota2 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
+                String nota3 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
+                String nota4 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
+                String notas = MessageFormat.format("Las últimas notas de {0} son: ", currentStudent.getName());
+                notas += nota1+" en Matemáticas ";
+                notas += nota2+" en Lenguaje ";
+                notas += nota3+" en Química";
+                notas += nota4+" en Historia";
                 answer = notas;
+
+                List<TableCardColumnProperties> columnProperties = new ArrayList<>();
+                columnProperties.add(new TableCardColumnProperties().setHeader("Fecha"));
+                columnProperties.add(new TableCardColumnProperties().setHeader("Asignatura"));
+                columnProperties.add(new TableCardColumnProperties().setHeader("Nota"));
+
+                List<TableCardRow> rows = new ArrayList<>();
+
+                List<TableCardCell> cells = new ArrayList<>();
+                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
+                cells.add(new TableCardCell().setText("Matemáticas"));
+                cells.add(new TableCardCell().setText(nota1));
+                rows.add(new TableCardRow().setCells(cells));
+                cells = new ArrayList<>();
+                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
+                cells.add(new TableCardCell().setText("Lenguaje"));
+                cells.add(new TableCardCell().setText(nota2));
+                rows.add(new TableCardRow().setCells(cells));
+                cells = new ArrayList<>();
+                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
+                cells.add(new TableCardCell().setText("Química"));
+                cells.add(new TableCardCell().setText(nota3));
+                rows.add(new TableCardRow().setCells(cells));
+                cells = new ArrayList<>();
+                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
+                cells.add(new TableCardCell().setText("Historia"));
+                cells.add(new TableCardCell().setText(nota4));
+                rows.add(new TableCardRow().setCells(cells));
+
+                TableCard table =
+                        new TableCard()
+                                .setTitle("Ultimas notas")
+                                .setSubtitle(currentStudent.getName())
+                                .setColumnProperties(columnProperties)
+                                .setRows(rows);
+
+                responseBuilder
+                        .add(table).addSuggestions(SUGGESTIONS);
                 break;
             case "no":
                 answer = "Lo siento, no sé a que alumno te refieres";
@@ -134,6 +190,46 @@ public class SchoolAssistantApp extends DialogflowApp {
 
     }
 
+
+    @ForIntent("sa.agent.student - rendimiento")
+    public ActionResponse studentRendimiento(ActionRequest request) {
+        ResponseBuilder responseBuilder = getResponseBuilder(request);
+
+        return responseBuilder
+                .add( "Veamos que dicen los datos sobre "+currentStudent.getName())
+                .add( currentStudent.getName() +" Ha subido su promedio de matemáticas un 20% los últimos meses")
+                .add( "Su última nota fue un 6")
+                .add( "No ha tenido anotaciones")
+                .add( "Probablemente podria mejorar su asistencia, su promedio esta bajando")
+                .add( "Eso es todo lo que puedo decir sobre el")
+                .build();
+
+    }
+
+
+    @ForIntent("sa.agent.student - asistencia")
+    public ActionResponse studentAsistencia(ActionRequest request) {
+        ResponseBuilder responseBuilder = getResponseBuilder(request);
+
+        return responseBuilder
+                .add( "Veamos que como ha sido la asistencia de "+currentStudent.getName())
+                .add( "En las últimas semanas ha llegado a la hora el 50% de los días")
+                .build();
+
+    }
+
+    @ForIntent("sa.agent.student - anotaciones")
+    public ActionResponse studentAnotaciones(ActionRequest request) {
+        ResponseBuilder responseBuilder = getResponseBuilder(request);
+
+        return responseBuilder
+                .add( "Según mis fuentes ...")
+                .add( currentStudent.getName()+" no tiene nuevas anotaciones")
+                .build();
+
+    }
+
+/*
 
     @ForIntent("sa.info.url")
         public ActionResponse infoUrl(ActionRequest request) {
@@ -193,5 +289,5 @@ public class SchoolAssistantApp extends DialogflowApp {
                                 "Here's a simple response. Which response would you like to see next?"));
         return responseBuilder.build();
     }
-
+*/
 }
