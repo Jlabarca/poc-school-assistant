@@ -98,51 +98,42 @@ public class SchoolAssistantApp extends DialogflowApp {
                 String nota2 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
                 String nota3 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
                 String nota4 = (rn.nextInt(4) + 1)+","+(rn.nextInt(4) + 1);
-                String notas = MessageFormat.format("Las últimas notas de {0} son: ", currentStudent.getName());
-                notas += nota1+" en Matemáticas ";
-                notas += nota2+" en Lenguaje ";
-                notas += nota3+" en Química";
-                notas += nota4+" en Historia";
-                answer = notas;
+
+                if (!request.hasCapability(Capability.SCREEN_OUTPUT.getValue())) {
+                    String notas = MessageFormat.format("Las últimas notas de {0} son: ", currentStudent.getName());
+                    notas += nota1+" en Matemáticas ";
+                    notas += nota2+" en Lenguaje ";
+                    notas += nota3+" en Química ";
+                    notas += nota4+" en Historia.";
+                    answer = notas;
+                    return responseBuilder.add(answer).build();
+                }
 
                 List<TableCardColumnProperties> columnProperties = new ArrayList<>();
                 columnProperties.add(new TableCardColumnProperties().setHeader("Fecha"));
                 columnProperties.add(new TableCardColumnProperties().setHeader("Asignatura"));
                 columnProperties.add(new TableCardColumnProperties().setHeader("Nota"));
 
+                String[] notas = {nota1,nota2,nota3,nota4};
                 List<TableCardRow> rows = new ArrayList<>();
-
-                List<TableCardCell> cells = new ArrayList<>();
-                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
-                cells.add(new TableCardCell().setText("Matemáticas"));
-                cells.add(new TableCardCell().setText(nota1));
-                rows.add(new TableCardRow().setCells(cells));
-                cells = new ArrayList<>();
-                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
-                cells.add(new TableCardCell().setText("Lenguaje"));
-                cells.add(new TableCardCell().setText(nota2));
-                rows.add(new TableCardRow().setCells(cells));
-                cells = new ArrayList<>();
-                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
-                cells.add(new TableCardCell().setText("Química"));
-                cells.add(new TableCardCell().setText(nota3));
-                rows.add(new TableCardRow().setCells(cells));
-                cells = new ArrayList<>();
-                cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
-                cells.add(new TableCardCell().setText("Historia"));
-                cells.add(new TableCardCell().setText(nota4));
-                rows.add(new TableCardRow().setCells(cells));
+                for (int i = 0; i < 4; i++) {
+                    log.info(notas[i]);
+                    List<TableCardCell> cells = new ArrayList<>();
+                    cells.add(new TableCardCell().setText(LocalDateTime.now().format(formatter)));
+                    cells.add(new TableCardCell().setText("Matemáticas"));
+                    cells.add(new TableCardCell().setText(notas[i]));
+                    rows.add(new TableCardRow().setCells(cells));
+                }
 
                 TableCard table =
                         new TableCard()
-                                .setTitle("Ultimas notas")
+                                .setTitle("Notas Matemáticas")
                                 .setSubtitle(currentStudent.getName())
                                 .setColumnProperties(columnProperties)
                                 .setRows(rows);
 
-                responseBuilder
-                        .add(table).addSuggestions(SUGGESTIONS);
-                break;
+                return responseBuilder
+                        .add("Últimas notas de "+currentStudent.getName()).add(table).addSuggestions(SUGGESTIONS).build();
             case "no":
                 answer = "Lo siento, no sé a que alumno te refieres";
                 break;
@@ -154,7 +145,7 @@ public class SchoolAssistantApp extends DialogflowApp {
         return responseBuilder
                 .add(answer)
                 .add("Necesitas saber algo más?")
-                .build();
+                .addSuggestions(SUGGESTIONS).build();
 
     }
 
